@@ -176,12 +176,13 @@ function formatDate(date) {
  * 1, 2024 => 8
  */
 function getCountWeekendsInMonth(month, year) {
-  let date = new Date(year, month - 1);
   let count = 0;
-  const MS_OF_DAY = 86_400_000;
-  while (date.getMonth() === month - 1) {
-    date = new Date(date.getTime() + MS_OF_DAY);
-    if (date.getUTCDay() === 0 || date.getUTCDay() === 6) {
+  const date = new Date(year, month, 0).getDate();
+
+  for (let i = 1; i <= date; i += 1) {
+    const dateVal = new Date(year, month - 1, i);
+
+    if (dateVal.getDay() === 6 || dateVal.getDay() === 0) {
       count += 1;
     }
   }
@@ -202,20 +203,21 @@ function getCountWeekendsInMonth(month, year) {
  * Date(2024, 1, 23) => 8
  */
 function getWeekNumberByDate(date) {
-  const startYearMs = new Date(date.getFullYear(), 0, 1).getTime();
-  const endYearMs = date.getTime();
-  const weakMs = 7 * 24 * 60 * 60 * 1000;
-  let res = Math.ceil((endYearMs - startYearMs) / weakMs);
-  if (
-    new Date(startYearMs).getUTCDay() === 0 &&
-    new Date(startYearMs).getUTCDay() > new Date(endYearMs).getUTCDay()
-  ) {
-    res += 1;
+  const year = new Date(date).getFullYear();
+  let firstDay = new Date(year, 0, 1).getDay();
+
+  let daysCount = 0;
+  if (!firstDay) firstDay = 7;
+  const daysFirstWeek = 7 - firstDay + 1;
+
+  for (let i = 0; i < new Date(date).getMonth(); i += 1) {
+    const daysMonth = new Date(year, i + 1, 0).getDate();
+    daysCount += daysMonth;
   }
-  if (new Date(startYearMs).getUTCDay() >= new Date(endYearMs).getUTCDay()) {
-    res += 1;
-  }
-  return res;
+
+  const daysInMonth = new Date(date).getDate();
+
+  return Math.ceil((daysCount + daysInMonth - daysFirstWeek) / 7) + 1;
 }
 
 /**
@@ -230,22 +232,23 @@ function getWeekNumberByDate(date) {
  * Date(2023, 1, 1) => Date(2023, 9, 13)
  */
 function getNextFridayThe13th(date) {
-  if (date.getUTCDate() < 12) {
-    date.setUTCDate(12);
-  } else {
-    date.setUTCDate(12);
-    date.setMonth(date.getMonth() + 1);
-  }
-  let flag = false;
-  while (!flag) {
-    if (date.getUTCDay() === 4) {
-      flag = true;
-      break;
+  let month = date.getMonth();
+  let year = date.getFullYear();
+  const day = 13;
+  let res;
+  let flag = true;
+  while (flag) {
+    res = new Date(year, month, day);
+    if (res.getDay() === 5) {
+      flag = false;
     }
-    date.setUTCMonth(date.getMonth() + 1);
+    month += 1;
+    if (month === 12) {
+      year += 1;
+      month = 0;
+    }
   }
-
-  return date;
+  return res;
 }
 
 /**
